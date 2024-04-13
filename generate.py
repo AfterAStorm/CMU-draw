@@ -1,16 +1,19 @@
 
-FILE = "fluff400.jpg"
-OUTPUT = "fluff.txt"
+FILE = "image.jpg"
+OUTPUT = "out.txt"
 
 # imports #
 
 from progress_bar import progress
+from time import time
 from PIL import Image
 
 image = Image.open(FILE, 'r')
 
 pixels = image.load()
 width, height = image.size
+if type(pixels[0, 0]) != tuple:
+    raise Exception("Invalid image type! Try a JPEG or JFIF or likewise!")
 
 print(f"Processing image of size ({width}, {height})")
 
@@ -26,11 +29,15 @@ result = f"{width},{height},%PALETTE%,"
 
 palette = []
 
+start = time()
+
 # find all unique colors; this is very ineffecient using to loops but i cannot be bothered, feel free to optimize
-# current 2*O(n) i think?
+# current 2*O(n^s) i think?
 # it's slow on larger images, have fun :D
 for x in range(width):
-    progress(x / width * .5)
+    timeProgressed = time() - start
+    timeRemaining = timeProgressed * (1 / (x / width + .001) - 1)
+    progress((x / width * .5), timeRemaining)
     for y in range(height):
         pixel = pixels[x, y]
         if pixel not in palette:
@@ -39,10 +46,14 @@ for x in range(width):
             result += f"{pixel},"
 result = result.replace("%PALETTE%", str(len(palette)))
 
+start = time()
+
 current_palette = None
 current_palette_count = -1
 for x in range(width):
-    progress(x / width * .5 + .5)
+    timeProgressed = time() - start
+    timeRemaining = timeProgressed * (1 / (x / width + .001) - 1)
+    progress((x / width * .5 + .5), timeRemaining)
     for y in range(height):
         pixel = pixels[x, y]
         color = palette.index(pixel) # get pallete index
